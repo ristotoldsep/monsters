@@ -1,55 +1,63 @@
-import { Component } from 'react';
+import { useState, useEffect } from "react";
 
-import CardList from './components/card-list/card-list.component';
-import SearchBox from './components/search-box/search-box.component';
-import './App.css';
+import CardList from "./components/card-list/card-list.component";
+import SearchBox from "./components/search-box/search-box.component";
+import "./App.css";
 
-class App extends Component {
+const App = () => {
+  // Setting state with useState hook
+  const [inputValue, setInputValue] = useState("");
+  const [monsters, setMonsters] = useState([]);
+  const [filteredMonsters, setFilteredMonsters] = useState(monsters);
 
-  constructor() {
-    super();
-
-    this.state = {
-      monsters: [],
-      inputValue : ''
+  // Initial API call to fetch data using useEffect hook
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+        const cats = await response.json();
+        setMonsters(cats);
+        console.log(cats);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-  }
 
-  componentDidMount() {
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then((response) => 
-        response.json())
-      .then((users) => this.setState(() => {
-        return {monsters: users}
-      },
-      () => {
-        console.log(this.state);
-      }));
-  }
+    fetchData();
+  }, []); // Empty dependency array means this effect runs once, equivalent to componentDidMount
 
-  onSearchChange = (event) => {
-    console.log(event.target.value);
-    this.setState({inputValue: event.target.value})
-  }
-
-  render() {
-
-    const { monsters, inputValue } = this.state;
-    const { onSearchChange } = this;
-
-    const filteredMonsters = monsters.filter((monster) => {
+  // Filter the monsters array only when search input or monsters array state changes!
+  useEffect(() => {
+    const newFilteredMonsters = monsters.filter((monster) => {
       return monster.name.toLowerCase().includes(inputValue.toLowerCase());
     });
 
-    return (
-      <div className="App">
-        <h1 className="app-title">Cats Rolodex (Hooks)</h1>
+    setFilteredMonsters(newFilteredMonsters);
+  }, [monsters, inputValue]);
 
-        <SearchBox className='monsters-search-box' placeholder='Search cats...' onSearchChange={onSearchChange} /> 
-        <CardList monsters={filteredMonsters} />
-      </div>
-    );
-  }
-}
+  // Search input change handler
+  const onSearchChange = (event) => {
+    console.log(event.target.value);
+
+    const searchFieldString = event.target.value;
+
+    setInputValue(searchFieldString);
+  };
+
+  return (
+    <div className="App">
+      <h1 className="app-title">Cats Rolodex (Hooks)</h1>
+
+      <SearchBox
+        className="monsters-search-box"
+        placeholder="Search cats..."
+        onSearchChange={onSearchChange}
+      />
+      <CardList monsters={filteredMonsters} />
+    </div>
+  );
+};
 
 export default App;
